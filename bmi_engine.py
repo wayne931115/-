@@ -1,12 +1,33 @@
 # bmi_engine.py
+"""
+健康建議引擎模組
+
+此模組實現簡單工廠模式（Simple Factory Pattern），根據 BMI 值
+動態創建對應的健康建議物件。包含六種 BMI 等級的建議類別。
+"""
 
 
 class HealthAdvice:
+    """
+    健康建議基類（抽象類別）
+    
+    所有具體的健康建議類別都應繼承此基類，並實現 get_info 方法。
+    """
     def get_info(self, bmi):
+        """
+        取得健康建議資訊
+        
+        Args:
+            bmi (float): BMI 值
+        
+        Returns:
+            str: 健康建議文字
+        """
         pass
 
 
 class Underweight(HealthAdvice):
+    """體重過輕建議類別（BMI < 18.5）"""
     def get_info(self, bmi):
         advice = f"BMI {bmi}: 您的體重過輕\n"
         advice += "飲食建議：增加高蛋白食物（肉類、蛋、豆類）、堅果、乳製品\n"
@@ -15,6 +36,7 @@ class Underweight(HealthAdvice):
         return advice
 
 class Normal(HealthAdvice):
+    """健康體重建議類別（18.5 ≤ BMI < 24）"""
     def get_info(self, bmi):
         advice = f"BMI {bmi}: 您的體重正常\n"
         advice += "飲食建議：繼續保持均衡飲食，五穀雜糧、蔬果、蛋白質適量\n"
@@ -23,6 +45,7 @@ class Normal(HealthAdvice):
         return advice
 
 class Overweight(HealthAdvice):
+    """體重過重建議類別（24 ≤ BMI < 27）"""
     def get_info(self, bmi):
         advice = f"BMI {bmi}: 您的體重過重\n"
         advice += "飲食建議：減少精緻糖、油炸食品；增加蔬菜水果和高纖食物\n"
@@ -30,13 +53,69 @@ class Overweight(HealthAdvice):
         advice += "🏥 建議：是，建議就醫評估心血管健康狀況"
         return advice
 
+class MildObesity(HealthAdvice):
+    """輕度肥胖建議類別（27 ≤ BMI < 30）"""
+    def get_info(self, bmi):
+        advice = f"BMI {bmi}: 您的體重輕度肥胖\n"
+        advice += "飲食建議：控制熱量攝取，避免高糖高油食物；多吃蔬菜和全穀類\n"
+        advice += "每周運動時長：7 小時以上有氧運動（跑步、游泳、飛輪）\n"
+        advice += "🏥 建議：是，建議就醫評估代謝和心血管風險"
+        return advice
+
+class ModerateObesity(HealthAdvice):
+    """中度肥胖建議類別（30 ≤ BMI < 35）"""
+    def get_info(self, bmi):
+        advice = f"BMI {bmi}: 您的體重中度肥胖\n"
+        advice += "飲食建議：醫師或營養師監督下的飲食計畫；嚴格控制熱量\n"
+        advice += "每周運動時長：7+ 小時中高強度運動，配合專業指導\n"
+        advice += "🏥 建議：是，必須就醫，評估是否需要藥物或手術治療"
+        return advice
+
+class SevereObesity(HealthAdvice):
+    """重度肥胖建議類別（BMI ≥ 35）"""
+    def get_info(self, bmi):
+        advice = f"BMI {bmi}: 您的體重重度肥胖\n"
+        advice += "飲食建議：醫療團隊監督下的嚴格飲食計畫\n"
+        advice += "每周運動時長：專業醫療團隊指導下的運動計畫\n"
+        advice += "🏥 建議：是，必須立即就醫，可能需要減重手術評估"
+        return advice
+
 # 簡單工廠
 class AdviceFactory:
+    """
+    健康建議工廠類別（簡單工廠模式）
+    
+    根據 BMI 值自動選擇並創建對應的健康建議物件。
+    這種設計模式將物件創建邏輯集中管理，提高代碼的可維護性和可擴展性。
+    """
     @staticmethod
     def create_advice(bmi):
+        """
+        根據 BMI 值創建對應的健康建議物件
+        
+        Args:
+            bmi (float): BMI 值
+        
+        Returns:
+            HealthAdvice: 對應的健康建議物件實例
+        
+        BMI 分類標準：
+            - BMI < 18.5: 體重過輕 (Underweight)
+            - 18.5 ≤ BMI < 24: 健康體重 (Normal)
+            - 24 ≤ BMI < 27: 體重過重 (Overweight)
+            - 27 ≤ BMI < 30: 輕度肥胖 (MildObesity)
+            - 30 ≤ BMI < 35: 中度肥胖 (ModerateObesity)
+            - BMI ≥ 35: 重度肥胖 (SevereObesity)
+        """
         if bmi < 18.5:
             return Underweight()
         elif 18.5 <= bmi < 24:
             return Normal()
-        else:
+        elif 24 <= bmi < 27:
             return Overweight()
+        elif 27 <= bmi < 30:
+            return MildObesity()
+        elif 30 <= bmi < 35:
+            return ModerateObesity()
+        else:  # bmi >= 35
+            return SevereObesity()

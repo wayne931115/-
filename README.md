@@ -79,10 +79,13 @@ if __name__ == "__main__":  # 程式進入點
 - 包含錯誤處理（ValueError、ZeroDivisionError）
 
 ### 3. **bmi_engine.py** - 工廠模式
-實現了三種健康狀態的建議類別：
+實現了六種健康狀態的建議類別：
 - `Underweight` - 體重過輕（BMI < 18.5）
-- `Normal` - 體重正常（18.5 ≤ BMI < 24）
-- `Overweight` - 體重過重（BMI ≥ 24）
+- `Normal` - 健康體重/正常（18.5 ≤ BMI < 24）
+- `Overweight` - 體重過重（24 ≤ BMI < 27）
+- `MildObesity` - 輕度肥胖（27 ≤ BMI < 30）
+- `ModerateObesity` - 中度肥胖（30 ≤ BMI < 35）
+- `SevereObesity` - 重度肥胖（BMI ≥ 35）
 
 `AdviceFactory` 根據 BMI 值動態創建對應的物件。
 
@@ -135,8 +138,11 @@ if __name__ == "__main__":  # 程式進入點
 #### 測試 5：BMI 邊界值
 ```
 BMI < 18.5：體重過輕
-18.5 ≤ BMI < 24：體重正常
-BMI ≥ 24：體重過重
+18.5 ≤ BMI < 24：健康體重/正常
+24 ≤ BMI < 27：體重過重
+27 ≤ BMI < 30：輕度肥胖
+30 ≤ BMI < 35：中度肥胖
+BMI ≥ 35：重度肥胖
 ```
 
 ### 手動測試步驟
@@ -191,6 +197,18 @@ class Normal(HealthAdvice):
 class Overweight(HealthAdvice):
     def get_info(self, bmi):
         return f"BMI {bmi}: 您的體重過重\n飲食建議：..."
+
+class MildObesity(HealthAdvice):
+    def get_info(self, bmi):
+        return f"BMI {bmi}: 您的體重輕度肥胖\n飲食建議：..."
+
+class ModerateObesity(HealthAdvice):
+    def get_info(self, bmi):
+        return f"BMI {bmi}: 您的體重中度肥胖\n飲食建議：..."
+
+class SevereObesity(HealthAdvice):
+    def get_info(self, bmi):
+        return f"BMI {bmi}: 您的體重重度肥胖\n飲食建議：..."
 ```
 
 **工廠類：**
@@ -202,8 +220,14 @@ class AdviceFactory:
             return Underweight()
         elif 18.5 <= bmi < 24:
             return Normal()
-        else:
+        elif 24 <= bmi < 27:
             return Overweight()
+        elif 27 <= bmi < 30:
+            return MildObesity()
+        elif 30 <= bmi < 35:
+            return ModerateObesity()
+        else:  # bmi >= 35
+            return SevereObesity()
 ```
 
 #### 💡 功能情境（使用場景）
@@ -225,36 +249,163 @@ class AdviceFactory:
 結果：顯示該使用者對應的健康建議（飲食、運動等）
 ```
 
-**情境 2：未來新增「肥胖 (Obese)」等級**
+**情境 2：使用者輸入身高 160cm、體重 90kg（重度肥胖）**
 
-```python
-# 新增肥胖類別
-class Obese(HealthAdvice):
-    def get_info(self, bmi):
-        advice = f"BMI {bmi}: 您的體重肥胖\n"
-        advice += "飲食建議：醫生監督下的低卡飲食\n"
-        advice += "每周運動時長：7+ 小時高強度運動\n"
-        advice += "🏥 建議：是，必須就醫"
-        return advice
+```
+流程分解：
+1. main.py 呼叫 bmi_logic.calculate_bmi_value("160", "90")
+   → 返回 BMI = 35.16
 
-# 只需修改工廠的判斷邏輯
-class AdviceFactory:
-    @staticmethod
-    def create_advice(bmi):
-        if bmi < 18.5:
-            return Underweight()
-        elif 18.5 <= bmi < 24:
-            return Normal()
-        elif 24 <= bmi < 30:
-            return Overweight()
-        else:  # BMI >= 30
-            return Obese()  # 新增分類
+2. main.py 呼叫 AdviceFactory.create_advice(35.16)
+   → 工廠判斷：BMI >= 35
+   → 返回 SevereObesity() 物件實例
+
+3. main.py 呼叫 advice_obj.get_info(35.16)
+   → 返回「您的體重重度肥胖」的具體建議
+
+結果：顯示嚴重肥胖等級的健康建議，包含就醫評估建議
 ```
 
-**優勢**：
-- 客戶端 (main.py) 不需要修改
-- 只有工廠和新增的類別需要改變
+**情境 3：使用者輸入身高 175cm、體重 85kg（過重）**
+
+```
+流程分解：
+1. main.py 呼叫 bmi_logic.calculate_bmi_value("175", "85")
+   → 返回 BMI = 27.76
+
+2. main.py 呼叫 AdviceFactory.create_advice(27.76)
+   → 工廠判斷：27 <= 27.76 < 30
+   → 返回 MildObesity() 物件實例
+
+3. main.py 呼叫 advice_obj.get_info(27.76)
+   → 返回「您的體重輕度肥胖」的具體建議
+
+結果：顯示輕度肥胖等級的健康建議
+```
+
+**工廠模式優勢**：
+- 客戶端 (main.py) 不需要知道具體類別
+- 新增或修改 BMI 等級時，只需調整工廠邏輯
 - 符合「開放-關閉原則」（對擴展開放，對修改關閉）
+- 六種等級自動選擇，無需手動判斷
+
+**未來擴展情境：加入年齡和病史的個性化建議**
+
+系統可以輕鬆擴展來支援年齡和病史（高血壓、糖尿病等）：
+
+```python
+# 擴展建議基類，加入年齡和病史參數
+class HealthAdvice:
+    def get_info(self, bmi, age=None, medical_history=None):
+        pass
+
+# 擴展的過重建議類
+class Overweight(HealthAdvice):
+    def get_info(self, bmi, age=None, medical_history=None):
+        advice = f"BMI {bmi}: 您的體重過重\n"
+        
+        # 根據年齡調整建議
+        if age and age >= 60:
+            advice += "飲食建議：溫和減重，避免過度節食；補充鈣質和維生素D\n"
+            advice += "每周運動時長：3-4 小時低衝擊運動（游泳、太極拳）\n"
+        else:
+            advice += "飲食建議：減少精緻糖、油炸食品；增加蔬菜水果\n"
+            advice += "每周運動時長：5-7 小時有氧運動\n"
+        
+        # 根據病史調整建議
+        if medical_history:
+            if '高血壓' in medical_history:
+                advice += "⚠️ 高血壓患者：嚴格控制鈉攝取，避免高鹽食物\n"
+            if '糖尿病' in medical_history:
+                advice += "⚠️ 糖尿病患者：控制碳水化合物，監測血糖變化\n"
+        
+        advice += "🏥 建議：是，建議就醫評估心血管健康狀況"
+        return advice
+
+# 使用示例
+bmi_result = 26.5
+advice_obj = AdviceFactory.create_advice(bmi_result)
+message = advice_obj.get_info(
+    bmi=bmi_result, 
+    age=65, 
+    medical_history=['高血壓', '糖尿病']
+)
+```
+
+**這種擴展的優勢**：
+- 不需要修改原有的工廠邏輯
+- 每個建議類別獨立處理年齡和病史
+- 可選參數設計，向後兼容
+- 輕鬆添加更多個性化因素（如性別、運動習慣等）
+
+---
+
+**未來擴展情境 2：加入體脂率，避免 BMI 誤判**
+
+BMI 無法區分肌肉和脂肪，可能誤判健身者為「過重」。加入體脂率可提供更精確的健康評估：
+
+```python
+# 擴展建議類，加入體脂率判斷
+class Overweight(HealthAdvice):
+    def get_info(self, bmi, body_fat_percentage=None, gender=None):
+        # 體脂率標準（依性別）
+        healthy_fat_male = (10, 20)    # 男性健康體脂率 10-20%
+        healthy_fat_female = (18, 28)  # 女性健康體脂率 18-28%
+        
+        advice = f"BMI {bmi}: "
+        
+        # 如果有體脂率數據，進行精確判斷
+        if body_fat_percentage is not None and gender:
+            if gender == '男':
+                if body_fat_percentage <= healthy_fat_male[1]:
+                    # BMI 過重但體脂正常 → 肌肉型
+                    advice += "您的 BMI 顯示過重，但體脂率正常\n"
+                    advice += "判斷：您可能是肌肉發達型，身體狀況良好！\n"
+                    advice += "飲食建議：保持高蛋白飲食，維持肌肉量\n"
+                    advice += "每周運動時長：繼續保持目前的運動習慣\n"
+                    advice += "🏥 建議：否，定期體檢即可"
+                    return advice
+            elif gender == '女':
+                if body_fat_percentage <= healthy_fat_female[1]:
+                    advice += "您的 BMI 顯示過重，但體脂率正常\n"
+                    advice += "判斷：您可能是肌肉發達型，身體狀況良好！\n"
+                    advice += "飲食建議：保持均衡飲食，適量補充鈣質\n"
+                    advice += "每周運動時長：繼續保持目前的運動習慣\n"
+                    advice += "🏥 建議：否，定期體檢即可"
+                    return advice
+        
+        # 沒有體脂率數據，使用傳統 BMI 判斷
+        advice += "您的體重過重\n"
+        advice += "飲食建議：減少精緻糖、油炸食品；增加蔬菜水果\n"
+        advice += "每周運動時長：5-7 小時有氧運動\n"
+        advice += "💡 提示：建議測量體脂率，以獲得更精確的健康評估\n"
+        advice += "🏥 建議：是，建議就醫評估心血管健康狀況"
+        return advice
+
+# 使用示例 1：健身者（BMI 過重但體脂正常）
+bmi_result = 26.5
+advice_obj = AdviceFactory.create_advice(bmi_result)
+message = advice_obj.get_info(
+    bmi=bmi_result, 
+    body_fat_percentage=18,  # 體脂率 18%
+    gender='男'
+)
+# 結果：判定為「肌肉發達型，身體狀況良好」
+
+# 使用示例 2：真正過重者（BMI 和體脂都過高）
+message = advice_obj.get_info(
+    bmi=bmi_result, 
+    body_fat_percentage=28,  # 體脂率 28%
+    gender='男'
+)
+# 結果：判定為「體重過重」，給予減重建議
+```
+
+**體脂率擴展的優勢**：
+- ✅ 避免誤判健身者、運動員為「過重」
+- ✅ 提供更精確的健康評估
+- ✅ 針對肌肉型和脂肪型給予不同建議
+- ✅ 鼓勵使用者測量體脂率以獲得完整數據
 
 #### 🎯 設計流程圖
 
@@ -266,7 +417,10 @@ class AdviceFactory:
 AdviceFactory.create_advice(bmi)
     ├─→ if bmi < 18.5 → Underweight()
     ├─→ elif 18.5 ≤ bmi < 24 → Normal()
-    └─→ else → Overweight()
+    ├─→ elif 24 ≤ bmi < 27 → Overweight()
+    ├─→ elif 27 ≤ bmi < 30 → MildObesity()
+    ├─→ elif 30 ≤ bmi < 35 → ModerateObesity()
+    └─→ else (bmi ≥ 35) → SevereObesity()
     ↓
 呼叫 advice_obj.get_info(bmi)
     ↓
