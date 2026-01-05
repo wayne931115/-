@@ -79,11 +79,10 @@ if __name__ == "__main__":  # 程式進入點
 - 包含錯誤處理（ValueError、ZeroDivisionError）
 
 ### 3. **bmi_engine.py** - 工廠模式
-實現了四種健康狀態的建議類別：
-- `Underweight` - 體重過輕
-- `Normal` - 體重正常
-- `Overweight` - 體重過重
-- `Obese` - 肥胖
+實現了三種健康狀態的建議類別：
+- `Underweight` - 體重過輕（BMI < 18.5）
+- `Normal` - 體重正常（18.5 ≤ BMI < 24）
+- `Overweight` - 體重過重（BMI ≥ 24）
 
 `AdviceFactory` 根據 BMI 值動態創建對應的物件。
 
@@ -136,9 +135,8 @@ if __name__ == "__main__":  # 程式進入點
 #### 測試 5：BMI 邊界值
 ```
 BMI < 18.5：體重過輕
-18.5 ≤ BMI < 25：體重正常
-25 ≤ BMI < 30：體重過重
-BMI ≥ 30：肥胖
+18.5 ≤ BMI < 24：體重正常
+BMI ≥ 24：體重過重
 ```
 
 ### 手動測試步驟
